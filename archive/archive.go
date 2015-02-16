@@ -70,8 +70,10 @@ func CreateArchive(path string, opts *ArchiveOpts) (*Archive, error) {
 	}
 
 	if fi.IsDir() {
+		log.Printf("[INFO] ================ archiveDir ")
 		return archiveDir(path, opts)
 	} else {
+		log.Printf("[INFO] ================ archiveFile ")
 		return archiveFile(path, opts)
 	}
 }
@@ -175,6 +177,7 @@ func archiveDir(root string, opts *ArchiveOpts) (*Archive, error) {
 
 		// If we have a list of VCS files, check that first
 		skip := false
+		// fmt.Println("=====> vcsInclude", vcsInclude)
 		if len(vcsInclude) > 0 {
 			skip = true
 			for _, f := range vcsInclude {
@@ -190,10 +193,12 @@ func archiveDir(root string, opts *ArchiveOpts) (*Archive, error) {
 			}
 		}
 
+		// fmt.Println("=====> opts.Include:", opts.Include)
 		// If include is present, we only include what is listed
 		if len(opts.Include) > 0 {
 			skip = true
 			for _, include := range opts.Include {
+				// fmt.Println("=====> include: ", include, ", subpath:", subpath)
 				match, err := filepath.Match(include, subpath)
 				if err != nil {
 					return err
@@ -221,9 +226,11 @@ func archiveDir(root string, opts *ArchiveOpts) (*Archive, error) {
 		// children if we're a directory.
 		if skip {
 			if info.IsDir() {
+				fmt.Println("=====> skipDir:", info)
+
 				return filepath.SkipDir
 			}
-
+			fmt.Println("..... skip file:", info)
 			return nil
 		}
 
@@ -231,6 +238,7 @@ func archiveDir(root string, opts *ArchiveOpts) (*Archive, error) {
 		// it doesn't matter if there is an error.
 		target, _ := os.Readlink(path)
 
+		fmt.Println("++++++++++++ including: ", info)
 		// Build the file header for the tar entry
 		header, err := tar.FileInfoHeader(info, target)
 		if err != nil {
